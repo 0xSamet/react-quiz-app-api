@@ -49,7 +49,7 @@ router.post("/girisyap", async (req, res, next) => {
         if (err) {
           throw new Error("E-Mail veya Şifre Yanlış");
         }
-        res.status(202).json({ token });
+        res.status(202).json({ token, user: payload });
       }
     );
   } catch (err) {
