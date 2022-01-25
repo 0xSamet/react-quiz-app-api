@@ -17,7 +17,7 @@ router.get("/", async (req, res, next) => {
     if (q) {
       const quizzes = await Quiz.find({
         description: { $regex: q, $options: "i" },
-      });
+      }).populate("author", "name");
       res.json(quizzes);
       return;
     }
