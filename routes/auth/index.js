@@ -3,18 +3,16 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../models/User");
 const { registerSchema, loginSchema } = require("../../schemas");
-//require("dotenv").config();
 
 const router = express.Router();
 
-router.get("/", async (req, res, next) => {
-  //const users = await User.find({});
+router.get("/me", (req, res) => {
   res.json({
-    message: "oturum",
+    user: req.user,
   });
 });
 
-router.post("/girisyap", async (req, res, next) => {
+router.post("/login", async (req, res, next) => {
   try {
     const validUser = await loginSchema.validateAsync(req.body);
 
@@ -23,7 +21,7 @@ router.post("/girisyap", async (req, res, next) => {
     });
 
     if (!user) {
-      throw new Error("E-Mail veya Şifre Yanlış");
+      throw new Error("E-mail or password is incorrect");
     }
 
     const passwordMatches = await bcrypt.compare(
@@ -32,7 +30,7 @@ router.post("/girisyap", async (req, res, next) => {
     );
 
     if (!passwordMatches) {
-      throw new Error("E-Mail veya Şifre Yanlış");
+      throw new Error("E-mail or password is incorrect");
     }
 
     const payload = {
@@ -47,9 +45,10 @@ router.post("/girisyap", async (req, res, next) => {
       { expiresIn: "1d" },
       (err, token) => {
         if (err) {
-          throw new Error("E-Mail veya Şifre Yanlış");
+          throw new Error("Internal Server Error");
         }
-        res.status(202).json({ token, user: payload });
+
+        res.json({ token, user: payload });
       }
     );
   } catch (err) {
@@ -57,7 +56,7 @@ router.post("/girisyap", async (req, res, next) => {
   }
 });
 
-router.post("/kayitol", async (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   try {
     const validUser = await registerSchema.validateAsync(req.body);
 
@@ -66,7 +65,7 @@ router.post("/kayitol", async (req, res, next) => {
     });
 
     if (isMailExists) {
-      throw new Error("Mail Sistemde Kayıtlı");
+      throw new Error("Mail is already in use");
     }
 
     const newUser = new User(req.body);

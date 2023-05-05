@@ -2,33 +2,38 @@ const express = require("express");
 const mongoose = require("mongoose");
 const volleyball = require("volleyball");
 const cors = require("cors");
-//require("dotenv").config();
+require("dotenv").config();
 
 const app = express();
 
-const oturum = require("./routes/oturum");
-const testler = require("./routes/testler");
+const authRoute = require("./routes/auth");
+const quizRoute = require("./routes/quizzes");
 
-const { checkTokenSetUser } = require("./routes/oturum/middlewares.js");
+const { checkTokenSetUser } = require("./routes/auth/middlewares.js");
 
-app.use(volleyball); // logger
-app.use(cors()); // cors
-app.use(checkTokenSetUser); // token varsa req.user = decoded token
-app.use(express.json()); //body parser
-app.set("json spaces", 2); //json format
+app.use(volleyball);
+app.use(cors());
+app.use(checkTokenSetUser);
+app.use(express.json());
+app.set("json spaces", 2);
 
 const DB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/quiz-app";
 
-mongoose.connect(DB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+(async () => {
+  try {
+    await mongoose.connect(DB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
-app.get("/", (req, res) => {
-  res.json({
-    user: req.user,
-  });
-});
+    console.log("MongoDB Connection Established");
+  } catch (err) {
+    console.log("MongoDB Connect Error", err);
+  }
+})();
 
-app.use("/oturum", oturum);
-app.use("/testler", testler);
+app.use("/auth", authRoute);
+app.use("/quizzes", quizRoute);
 
 const notFound = (req, res, next) => {
   res.status(404);
@@ -46,7 +51,7 @@ const errorHandler = (error, req, res, next) => {
 app.use(notFound);
 app.use(errorHandler);
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5006;
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);
 });

@@ -1,12 +1,11 @@
 const express = require("express");
 const moment = require("moment");
-moment.locale("tr");
 
 const Quiz = require("../../models/Quiz");
 
 const router = express.Router();
 
-const { isLoggedIn } = require("../oturum/middlewares");
+const { isLoggedIn } = require("../auth/middlewares");
 
 const { quizSchema } = require("../../schemas");
 
@@ -18,11 +17,33 @@ router.get("/", async (req, res, next) => {
       const quizzes = await Quiz.find({
         description: { $regex: q, $options: "i" },
       }).populate("author", "name");
+
       res.json(quizzes);
+
       return;
     }
+
     const quizzes = await Quiz.find({}).populate("author", "name");
     res.json(quizzes);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/:quizId", async (req, res, next) => {
+  try {
+    const { quizId } = req.params;
+
+    console.log(req.params);
+    if (quizId) {
+      const quiz = await Quiz.findOne({
+        _id: quizId,
+      }).populate("author", "name");
+
+      return res.json({ quiz });
+    }
+
+    throw new Error(`Not Found - ${quizId}`);
   } catch (err) {
     next(err);
   }
@@ -45,16 +66,5 @@ router.post("/", isLoggedIn, async (req, res, next) => {
     next(err);
   }
 });
-
-router.get("/:id", (req, res) => {
-  const { id } = req.params;
-  res.json({
-    message: "test " + id,
-  });
-});
-
-/*router.post("/signup", (req, res) => {
-  res.json(req.body);
-});*/
 
 module.exports = router;
