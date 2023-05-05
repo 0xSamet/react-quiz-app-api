@@ -48,7 +48,7 @@ router.post("/login", async (req, res, next) => {
           throw new Error("Internal Server Error");
         }
 
-        res.json({ token, user: payload });
+        res.status(202).json({ token, user: payload });
       }
     );
   } catch (err) {
